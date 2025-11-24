@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Critical Care Webinars</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-1WKDR4C816"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1WKDR4C816');
+  </script>
+
+  <style>
+    /* ===== VARIABLES Y RESET ===== */
+    :root {
+      --primary: #0284c7;       
+      --primary-dark: #0369a1;  
+      --secondary: #334155;     
+      --bg-body: #f8fafc;       
+      --bg-card: #ffffff;       
+      --accent-gold: #fbbf24;   
+      --success-text: #047857;  
+      --border-radius: 12px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-body);
+      color: var(--secondary);
+      min-height: 100vh; 
+      padding: 20px;
+      line-height: 1.5;
+    }
+    
+    .container { max-width: 1100px; margin: 0 auto; }
+
+    /* ===== NAVEGACIÓN ===== */
+    .top-nav {
+      background: var(--bg-card);
+      border-radius: var(--border-radius);
+      padding: 15px 25px;
+      margin-bottom: 25px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 3px solid var(--primary);
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .nav-logo-placeholder { display: flex; align-items: center; gap: 12px; }
+    
+    .nav-links { display: flex; gap: 20px; align-items: center; }
+    .nav-links a {
+      color: var(--secondary);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: color 0.2s;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .nav-links a:hover { color: var(--primary); }
+    
+    .nav-links a.highlight-link {
+      background: #f0f9ff;
+      color: var(--primary);
+      padding: 8px 16px;
+      border-radius: 20px;
+      border: 1px solid #bae6fd;
+    }
+    .nav-links a.highlight-link:hover { background: var(--primary); color: white; }
+
+    /* ===== HEADER ===== */
+    header {
+      background: var(--bg-card);
+      border-radius: var(--border-radius);
+      padding: 30px; 
+      margin-bottom: 30px;
+      box-shadow: var(--shadow-sm);
+    }
+    h1 { color: var(--primary-dark); font-size: 2em; margin-bottom: 5px; letter-spacing: -0.5px; }
+    .subtitle { color: #64748b; font-size: 1.1em; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #e2e8f0; min-height: 20px;}
+    
+    .intro { background: #f8fafc; border-left: 4px solid var(--primary); padding: 15px; border-radius: 4px; color: #475569; font-size: 0.95em; }
+    .social-link {
+      display: inline-flex; align-items: center; gap: 8px; margin-top: 15px;
+      color: var(--primary-dark); text-decoration: none; font-weight: 600;
+      background: #e0f2fe; padding: 8px 16px; border-radius: 20px;
+      transition: background 0.2s;
+    }
+    .social-link:hover { background: #bae6fd; }
+
+    /* ===== ESTADOS DE CARGA ===== */
+    .loading { background: var(--bg-card); border-radius: var(--border-radius); padding: 40px; text-align: center; box-shadow: var(--shadow-sm); margin-bottom: 30px; }
+    .loading-spinner { border: 3px solid #e2e8f0; border-top: 3px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 15px; }
+    @keyframes spin { 0% { transform: rotate(0deg);} 100%{ transform: rotate(360deg);} }
+    .error { background: #fef2f2; border: 1px solid #fca5a5; border-radius: var(--border-radius); padding: 20px; margin-bottom: 30px; color: #991b1b; }
+
+    /* ===== ESTADÍSTICAS Y FILTROS ===== */
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin-bottom: 30px; }
+    .stat-card {
+      background: var(--bg-card); padding: 20px; border-radius: var(--border-radius);
+      box-shadow: var(--shadow-sm); text-align: center; border-bottom: 3px solid #e2e8f0;
+    }
+    .stat-number { font-size: 1.8em; color: var(--primary); font-weight: 700; line-height: 1; margin-bottom: 5px; }
+    .stat-label { color: #64748b; font-size: 0.85em; font-weight: 500; text-transform: uppercase; }
+
+    .filters { 
+      background: var(--bg-card); border-radius: var(--border-radius); padding: 20px; 
+      margin-bottom: 25px; box-shadow: var(--shadow-sm); display: flex; gap: 12px; 
+      flex-wrap: wrap; align-items: center; border: 1px solid #e2e8f0;
+    }
+    select, input[type="text"] {
+      padding: 10px 15px; border: 1px solid #cbd5e1; border-radius: 6px; 
+      font-size: 0.95em; outline: none; background: #fff; color: var(--secondary);
+    }
+    .btn-secondary { 
+      background: white; color: var(--primary); border: 1px solid var(--primary); 
+      padding: 9px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; 
+      transition: all .2s; font-size: 0.9em; display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-secondary:hover { background: var(--primary); color: #fff; }
+    .toggle-today { 
+      background: #fff; color: var(--secondary); border: 1px solid #94a3b8; 
+      padding: 8px 16px; border-radius: 20px; font-weight: 600; cursor: pointer; font-size: 0.9em;
+    }
+    .toggle-today.active { background: var(--secondary); color:#fff; border-color: var(--secondary); }
+
+    /* ===== GRID DE EVENTOS ===== */
+    .day-section { margin-bottom: 25px; }
+    .day-header { 
+      background: var(--bg-card); border-radius: 6px; padding: 12px 20px; 
+      margin-bottom: 2px; box-shadow: var(--shadow-sm); display: flex; 
+      justify-content: space-between; align-items: center; cursor: pointer; 
+      border-left: 4px solid #cbd5e1; transition: background 0.2s;
+    }
+    .day-header:hover { background: #f8fafc; }
+    .day-header.today { border-left-color: var(--primary); background: #f0f9ff; }
+    .day-title { color: var(--secondary); font-size: 1.1em; font-weight: 700; }
+    .today-badge { background: var(--primary); color: white; padding: 3px 8px; border-radius: 4px; font-size: 0.75em; font-weight: 700; margin-left: 10px; text-transform: uppercase; }
+    
+    .day-content { overflow: hidden; transition: max-height 0.3s ease-out; }
+    .day-content.collapsed { max-height: 0 !important; }
+    
+    .events-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 15px; margin-top: 10px; }
+    .event-card { 
+      background: var(--bg-card); border-radius: var(--border-radius); padding: 20px; 
+      box-shadow: var(--shadow-sm); border: 1px solid #e2e8f0;
+      transition: transform 0.2s, box-shadow 0.2s; 
+    }
+    .event-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: var(--primary); }
+    .event-card.certified { background: #f8fcfc; border-top: 3px solid var(--success-text); }
+    
+    .event-meta { display: flex; justify-content: space-between; margin-bottom: 10px; }
+    .category-tag { background: #f1f5f9; color: #475569; padding: 4px 10px; border-radius: 4px; font-size: 0.75em; font-weight: 700; text-transform: uppercase; }
+    .event-time { color: var(--primary); font-weight: 700; font-size: 1em; display: flex; align-items: center; gap: 5px; }
+    .event-title { color: #1e293b; font-size: 1.1em; font-weight: 700; margin-bottom: 8px; line-height: 1.4; }
+    .event-organizer { color: #64748b; font-size: 0.9em; margin-bottom: 15px; display: flex; align-items: center; gap: 6px; }
+    .event-actions { display: flex; gap: 10px; margin-top: 15px; }
+    .btn-join { 
+      background: var(--primary); color: white; text-decoration: none; 
+      padding: 8px 14px; border-radius: 6px; font-size: 0.9em; font-weight: 600; 
+      flex: 1; text-align: center; transition: background 0.2s;
+    }
+    .btn-join:hover { background: var(--primary-dark); }
+    .btn-icon { background: #f1f5f9; color: #475569; border: none; width: 36px; height: 36px; border-radius: 6px; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; justify-content: center;}
+    .btn-icon:hover { background: #e2e8f0; color: var(--primary); }
+
+    /* ===== SECCIÓN PREVENCIONES (Videos) ===== */
+    .vulnerable-section {
+      background: #ffffff; border: 1px solid #bae6fd;
+      border-left: 5px solid var(--primary); border-radius: var(--border-radius);
+      padding: 30px; margin-top: 40px; box-shadow: var(--shadow-sm);
+    }
+    .section-header {
+      border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 20px;
+      color: var(--primary-dark); font-size: 1.4em; font-weight: 700; display: flex; align-items: center; gap: 10px;
+    }
+    .video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+    .video-card {
+      background: white; border-radius: 12px; box-shadow: var(--shadow-sm);
+      overflow: hidden; cursor: pointer; transition: transform 0.3s; border: 1px solid #e2e8f0;
+    }
+    .video-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-md); border-color: var(--primary); }
+    .video-thumbnail {
+      height: 160px; background: #334155; display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 3em; position: relative;
+    }
+    .video-thumbnail::after {
+      content: '▶'; position: absolute; font-size: 2rem; opacity: 0.8; text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    }
+    .video-info { padding: 15px; }
+    .video-info h4 { margin: 0; color: var(--primary-dark); font-size: 1.1em; margin-bottom: 5px;}
+    .video-info p { margin: 0; color: #64748b; font-size: 0.9em; }
+
+    /* Modal Video */
+    .video-modal {
+      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center;
+      padding: 20px; flex-direction: column;
+    }
+    .video-wrapper {
+      position: relative; width: 100%; max-width: 900px; aspect-ratio: 16/9;
+      background: black; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    .video-wrapper iframe { width: 100%; height: 100%; border-radius: 12px; }
+    .close-modal { position: absolute; top: -40px; right: 0; color: white; font-size: 2rem; cursor: pointer; }
+    .fallback-link { margin-top: 15px; color: white; text-decoration: underline; font-size: 0.9em; cursor: pointer; }
+
+    /* ===== RECURSOS (Acordeón) ===== */
+    .resources-section { 
+      background: var(--bg-card); border-radius: var(--border-radius); padding: 30px; 
+      margin-top: 40px; box-shadow: var(--shadow-sm); border: 1px solid #e2e8f0;
+    }
+    .resource-accordion-header {
+      width: 100%; text-align: left; background: #f8fafc; border: 1px solid #e2e8f0;
+      padding: 18px 20px; cursor: pointer; font-size: 1.1em; font-weight: 600;
+      color: var(--secondary); margin-top: 15px; display: flex; justify-content: space-between;
+      align-items: center; border-radius: 8px; transition: all 0.2s;
+    }
+    .resource-accordion-header:hover { background: #f1f5f9; color: var(--primary); }
+    .resource-accordion-header.open { background: #f0f9ff; border-color: var(--primary); color: var(--primary-dark); }
+    .resource-accordion-header i { transition: transform 0.3s; }
+    .resource-accordion-header.open i { transform: rotate(180deg); }
+    
+    /* Estilo de contenido del acordeón */
+    .resource-accordion-content { 
+      display: none; /* Oculto por defecto */
+      padding: 0;
+      margin-top: 10px;
+      animation: fadeIn 0.3s;
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    
+    .resource-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; }
+    .resource-card { background: linear-gradient(135deg, #f5f7ff 0%, #fff5f8 100%); border: 2px solid #e0e5ff; border-radius: 10px; padding: 15px; transition: all 0.3s; cursor: pointer; }
+    .resource-card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(102,126,234,0.3); border-color: #667eea; }
+    .resource-card h4 { color: #667eea; font-size: 1.1em; margin-bottom: 8px; }
+    .resource-card p { color: #555; font-size: 0.9em; line-height: 1.4; }
+
+    .featured-gold { border: 1px solid var(--accent-gold) !important; background: linear-gradient(to bottom right, #fffbeb, #fff) !important; position: relative; }
+    .featured-badge { background: var(--accent-gold); color: #78350f; font-size: 0.7rem; font-weight: 800; padding: 2px 8px; border-radius: 10px; position: absolute; top: 10px; right: 10px; }
+
+    .support-box { background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: var(--border-radius); padding: 25px; margin-top: 20px; }
+    
+    @media (max-width: 768px) { 
+      h1 { font-size: 1.6em; } 
+      .events-grid { grid-template-columns: 1fr; }
+      .stats { grid-template-columns: 1fr 1fr; }
+      .nav-links { display: none; } 
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+
+    <div class="top-nav">
+      <div class="nav-logo-placeholder">
+        <span style="font-weight:700; font-size:1.2em; color:var(--primary-dark);">CCW</span>
+      </div>
+      <div class="nav-links">
+        <a href="#mainContent"><i class="fa-solid fa-calendar-days"></i> Seminarios</a>
+        <a href="#resources-section"><i class="fa-solid fa-book-medical"></i> Recursos</a>
+        <a href="#vulnerable-section" class="highlight-link"><i class="fa-solid fa-users-rays"></i> Compartamos Paciente</a>
+      </div>
+    </div>
+
+    <div class="info-header">
+      <div class="date-title" id="dynamicDateHeader"></div>
+      <div class="intro">
+        <div style="margin-bottom: 15px;">
+          <strong><i class="fa-solid fa-globe"></i> Global Impact:</strong> 
+          Reaching professionals in 95+ countries, benefiting 2,500+ clinicians with 600+ archived webinars.
+        </div>
+        <p>
+          Academic agenda for Critical Care, ECMO, and Simulation. Consolidating global learning opportunities in <strong>Lima Time (GMT-5)</strong>.
+        </p>
+        <a href="https://www.instagram.com/ccw_critalcarewebinars?igsh=dWNiNzc4MWVnZjE5" target="_blank" rel="noopener" class="social-link">
+          <i class="fa-brands fa-instagram"></i> Follow @ccw_critalcarewebinars
+        </a>
+      </div>
+    </div>
+
+    <div id="loadingSection" class="loading">
+      <div class="loading-spinner"></div>
+    </div>
+    <div id="errorSection" class="error" style="display:none;"></div>
+
+    <div id="mainContent" style="display:none;">
+      
+      <div class="stats">
+        <div class="stat-card">
+          <div class="stat-number" id="totalEvents">0</div>
+          <div class="stat-label">Events this week</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="visibleEvents">0</div>
+          <div class="stat-label">Visible</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="futureEvents">0</div>
+          <div class="stat-label">Upcoming</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="prevWeekEvents">--</div>
+          <div class="stat-label">Last Week</div>
+        </div>
+        <div class="stat-card" style="cursor:pointer;" id="exportWeek">
+          <div class="stat-number"><i class="fa-solid fa-download" style="font-size:0.7em;"></i></div>
+          <div class="stat-label">Export (.ics)</div>
+        </div>
+      </div>
+
+      <div class="filters">
+        <div class="filter-actions" style="margin-right:15px;">
+          <button id="toggleTodayBtn" class="toggle-today">
+            <i class="fa-solid fa-calendar-day"></i> Today Only
+          </button>
+        </div>
+        <span class="filter-label">Filter:</span>
+        <select id="dayFilter"></select>
+        <select id="langFilter">
+          <option value="__ALL__">All Languages</option>
+        </select>
+        <input type="text" id="searchFilter" placeholder="Topic, organizer...">
+        <button id="reloadBtn" class="btn-secondary"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
+      </div>
+
+      <div id="eventsContainer"></div>
+
+      <div class="archive" id="archiveBlock" style="display:none;">
+        <h3 style="color:var(--secondary); margin-bottom:15px;">Previous Weeks</h3>
+        <div class="accordion" id="archiveAccordion"></div>
+      </div>
+
+      <div id="vulnerable-section" class="vulnerable-section">
+        <h2 class="section-header"><i class="fa-solid fa-shield-heart"></i> Sección de prevenciones</h2>
+        <p style="color:#475569;">
+          Material educativo audiovisual enfocado en la prevención de riesgos y conductas nocivas en adolescentes. 
+          Haz clic para ver el video.
+        </p>
+        
+        <div class="video-grid">
+           <div class="video-card" onclick="openVideo('https://drive.google.com/file/d/1GUuJtALIHAK7kMjzWRntyD8lRaSGb-u3/preview')">
+             <div class="video-thumbnail" style="background: #e11d48;">
+               <i class="fa-solid fa-wine-bottle"></i>
+             </div>
+             <div class="video-info">
+               <h4>Prevención: Alcoholismo</h4>
+               <p>Impacto del alcohol en el desarrollo adolescente.</p>
+             </div>
+           </div>
+
+           <div class="video-card" onclick="openVideo('https://drive.google.com/file/d/17eflbZa93r2N-aLeo5qflf0tr_3Ijk4d/preview')">
+             <div class="video-thumbnail" style="background: #0f172a;">
+               <i class="fa-solid fa-pills"></i>
+             </div>
+             <div class="video-info">
+               <h4>Riesgos del Consumo de Drogas</h4>
+               <p>Efectos neurobiológicos y sociales.</p>
+             </div>
+           </div>
+
+           <div class="video-card" onclick="openVideo('https://drive.google.com/file/d/1zaAiKkjX8PnJnqh8-UtrdsofJzTPSg5v/preview')">
+             <div class="video-thumbnail" style="background: #64748b;">
+               <i class="fa-solid fa-cloud-showers-heavy"></i>
+             </div>
+             <div class="video-info">
+               <h4>La Verdad sobre el Vapeo</h4>
+               <p>Mitos y daños pulmonares asociados.</p>
+             </div>
+           </div>
+        </div>
+      </div>
+
+      <div id="videoModal" class="video-modal">
+        <div class="video-wrapper">
+          <span class="close-modal" onclick="closeVideo()">×</span>
+          <iframe id="genericFrame" src="" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+        </div>
+        <a id="fallbackLink" href="#" target="_blank" class="fallback-link">
+          ¿No carga el video? Haz clic aquí para abrirlo en una nueva pestaña
+        </a>
+      </div>
+
+      <div class="resources-section" id="resources-section">
+        <h2 class="section-header"><i class="fa-solid fa-layer-group"></i> Resources</h2>
+
+        <button class="resource-accordion-header">
+           <span><i class="fa-solid fa-graduation-cap"></i> Courses</span>
+           <i class="fa-solid fa-chevron-down"></i>
+        </button>
+        <div class="resource-accordion-content">
+          <div class="resource-grid">
+            <div class="resource-card featured-gold" onclick="window.open('https://lnkd.in/ePXZUYVr', '_blank')">
+               <div class="featured-badge">New</div>
+               <h4>Competencias Docentes (AMFEM)</h4>
+               <p>Autogestiva. Dr. Ismael David Piedra.</p>
+            </div>
+            <div class="resource-card featured-gold" onclick="window.open('https://campus.paho.org/es/curso/manejo-sepsis', '_blank')">
+               <div class="featured-badge">Free</div>
+               <h4>Curso de Sepsis OPS</h4>
+               <p>Online y gratuito. PAHO.</p>
+            </div>
+            <div class="resource-card" onclick="window.open('https://simulamos.tiendup.com/', '_blank')">
+               <h4>Enseñanza en Simulación</h4>
+               <p>Dr. Federico Ferrero.</p>
+            </div>
+            <div class="resource-card" onclick="window.open('https://getinge.training/lms/signin', '_blank')">
+               <h4>Getinge Training LMS</h4>
+               <p>Ventilation & ECMO modules.</p>
+            </div>
+            <div class="resource-card" onclick="window.open('https://www.fccs.org/', '_blank')">
+               <h4>FCCS (SCCM)</h4>
+               <p>Fundamental Critical Care Support.</p>
+            </div>
+          </div>
+        </div>
+
+        <button class="resource-accordion-header">
+           <span><i class="fa-solid fa-mobile-screen"></i> Essential Apps</span>
+           <i class="fa-solid fa-chevron-down"></i>
+        </button>
+        <div class="resource-accordion-content">
+          <div class="resource-grid">
+            <div class="resource-card" onclick="window.open('https://www.mdcalc.com/', '_blank')">
+              <h4>MDCalc</h4>
+              <p>Validated clinical calculators.</p>
+            </div>
+            <div class="resource-card" onclick="window.open('https://apps.apple.com/app/uptodate/id334265345', '_blank')">
+              <h4>UpToDate</h4>
+              <p>Evidence-based clinical support.</p>
+            </div>
+             <div class="resource-card" onclick="window.open('https://apps.apple.com/us/search?term=CSWG', '_blank')">
+              <h4>CSWG App</h4>
+              <p>Cardiogenic Shock Working Group.</p>
+            </div>
+             <div class="resource-card" onclick="window.open('https://apps.apple.com/us/search?term=ELSO%20Bedside%20Guide', '_blank')">
+              <h4>ELSO Bedside Guide</h4>
+              <p>ECMO guidance.</p>
+            </div>
+          </div>
+        </div>
+
+        <button class="resource-accordion-header">
+           <span><i class="fa-solid fa-book"></i> Recommended Books</span>
+           <i class="fa-solid fa-chevron-down"></i>
+        </button>
+        <div class="resource-accordion-content">
+           <div class="resource-grid">
+              <div class="resource-card featured-gold" onclick="window.open('https://drive.google.com/file/d/1i1EGQC0WAzzSvxYgb22zsd7u7EPLDVDB/view?usp=sharing', '_blank')">
+                <div class="featured-badge">Featured</div>
+                <h4>El Universo Educativo es una Simulación</h4>
+                <p>By Dr. Federico Ferrero. Essential reading on simulation pedagogy.</p>
+              </div>
+           </div>
+        </div>
+
+        <button class="resource-accordion-header">
+           <span><i class="fa-solid fa-gamepad"></i> Simulation Tools</span>
+           <i class="fa-solid fa-chevron-down"></i>
+        </button>
+        <div class="resource-accordion-content">
+           <div class="resource-grid">
+             <div class="resource-card" onclick="window.open('https://www.resusroom.com/', '_blank')">
+               <h4>Resus Room</h4>
+               <p>Interactive resuscitation.</p>
+             </div>
+             <div class="resource-card" onclick="window.open('https://www.heartsim.com/', '_blank')">
+               <h4>HeartSim</h4>
+               <p>ECG Rhythm training.</p>
+             </div>
+             <div class="resource-card" onclick="window.open('https://apps.apple.com/us/search?term=Hamilton%20Vent%20Trainer', '_blank')">
+               <h4>Hamilton Vent Trainer</h4>
+               <p>Ventilator simulator.</p>
+             </div>
+           </div>
+        </div>
+
+        <button class="resource-accordion-header">
+           <span><i class="fa-solid fa-headphones"></i> Podcasts</span>
+           <i class="fa-solid fa-chevron-down"></i>
+        </button>
+        <div class="resource-accordion-content">
+          <div class="resource-grid">
+             <div class="resource-card" onclick="window.open('https://www.sccm.org/communications/sccm-podcast', '_blank')">
+               <h4>SCCM Podcast</h4>
+             </div>
+             <div class="resource-card" onclick="window.open('https://store.nejm.org/signup/ai/podcasts', '_blank')">
+               <h4>NEJM AI Podcast</h4>
+             </div>
+             <div class="resource-card" onclick="window.open('https://www.theresusroom.co.uk/category/podcasts/', '_blank')">
+               <h4>The Resus Room</h4>
+             </div>
+             <div class="resource-card" onclick="window.open('https://scc.org.co/category/podcast/', '_blank')">
+               <h4>Sociedad Colombiana UCI</h4>
+             </div>
+             <div class="resource-card" onclick="window.open('https://open.spotify.com/show/10v0DqwnuAZH19Auvhri45', '_blank')">
+               <h4>Simucast LATAM</h4>
+             </div>
+          </div>
+        </div>
+
+        <button class="resource-accordion-header">
+           <span><i class="fa-brands fa-youtube"></i> YouTube Channels</span>
+           <i class="fa-solid fa-chevron-down"></i>
+        </button>
+        <div class="resource-accordion-content">
+          <div class="resource-grid">
+             <div class="resource-card" onclick="window.open('https://www.youtube.com/channel/UCESYe22nC1uSmxqj4lQmRvA', '_blank')">
+               <h4>ICU Advantage</h4>
+             </div>
+             <div class="resource-card" onclick="window.open('https://www.youtube.com/@WorldSepsisDay', '_blank')">
+               <h4>World Sepsis Day</h4>
+             </div>
+             <div class="resource-card" onclick="window.open('https://www.youtube.com/@euroelso544', '_blank')">
+               <h4>EuroELSO</h4>
+             </div>
+             <div class="resource-card" onclick="window.open('https://www.youtube.com/@HealthcareTrainingExperience', '_blank')">
+               <h4>Healthcare Training</h4>
+             </div>
+             <div class="resource-card" onclick="window.open('https://www.youtube.com/@sociedadargentinadeterapia7430', '_blank')">
+               <h4>SATI (Argentina)</h4>
+             </div>
+             <div class="resource-card" onclick="window.open('https://www.youtube.com/@Canal_INER', '_blank')">
+               <h4>Canal INER</h4>
+             </div>
+             <div class="resource-card" onclick="window.open('https://www.youtube.com/@SBCECOFICIAL', '_blank')">
+               <h4>SBCEC (Perfusion)</h4>
+             </div>
+          </div>
+        </div>
+
+      </div> <div class="resources-section" style="border-top: 4px solid var(--primary);">
+        <h2 style="font-size:1.4em; color:var(--primary-dark); margin-bottom:15px;">Support the Project</h2>
+        <p style="color:#475569;">We are a non-profit initiative committed to open access education.</p>
+        <div class="support-box">
+           <strong style="color:var(--primary);">Donation (Crypto):</strong><br>
+           <span style="font-family:monospace; font-size:0.9em; color:#334155;">BTC: 1Cy8uxDTQ6CWbxFxAQX88NTHh7EWZc2Z5A</span>
+        </div>
+      </div>
+
+    </div> </div> <script>
+    // URL DE DATOS
+    const BASE_SHEET_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSgscb3CQReXXkS1S7Sgj_e-COWBuQ38YO-eJ9Cr3wOvV8MCPGFt-s-01KLNkCpi00zqFnMvMsL4zTi/pub?gid=1245803309&single=true&output=csv';
+    
+    const GID_SHEET_CURRENT = '1245803309'; 
+    const GID_SHEET_PREV = '736093974';
+ 
+    // DEFINICIÓN MANUAL DE SEMANAS
+    const WEEKS = [
+      {
+        key: 'current',
+        label: 'Week Nov 24 – 30, 2025',
+        gid: GID_SHEET_CURRENT,
+        start: '2025-11-24',
+        end: '2025-11-30',
+        dayNames: {
+          '2025-11-24': 'Monday, Nov 24',
+          '2025-11-25': 'Tuesday, Nov 25',
+          '2025-11-26': 'Wednesday, Nov 26',
+          '2025-11-27': 'Thursday, Nov 27',
+          '2025-11-28': 'Friday, Nov 28',
+          '2025-11-29': 'Saturday, Nov 29',
+          '2025-11-30': 'Sunday, Nov 30'
+        }
+      },
+      {
+        key: 'prev',
+        label: 'Week Nov 17 – 23, 2025',
+        gid: GID_SHEET_PREV,
+        start: '2025-11-17',
+        end:   '2025-11-23',
+        dayNames: {
+          '2025-11-17': 'Monday, Nov 17',
+          '2025-11-18': 'Tuesday, Nov 18',
+          '2025-11-19': 'Wednesday, Nov 19',
+          '2025-11-20': 'Thursday, Nov 20',
+          '2025-11-21': 'Friday, Nov 21',
+          '2025-11-22': 'Saturday, Nov 22',
+          '2025-11-23': 'Sunday, Nov 23'
+        }
+      }
+    ];
+ 
+    const buildSheetUrl = (gid) => BASE_SHEET_CSV.replace(/gid=\d+/, `gid=${gid}`);
+ 
+    let events = [];
+    let allDates = new Set();
+    let archive = {};
+    let showTodayOnly = true;
+ 
+    function safeSetText(id, text) {
+      const el = document.getElementById(id);
+      if (el) {
+        el.textContent = text;
+      }
+    }
+
+    function normalizeDate(x) {
+      if (!x) return "";
+      const s = String(x).trim();
+      if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+      const m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+      if (m) {
+        let [, d, mo, y] = m;
+        if (y.length === 2) y = (Number(y) > 50 ? "19" : "20") + y;
+        return `${y.padStart(4, "0")}-${mo.padStart(2, "0")}-${d.padStart(2, "0")}`;
+      }
+      return "";
+    }
+ 
+    function normalizeTime(x) {
+      if (x === null || x === undefined) return "";
+      let s = String(x).trim().toLowerCase();
+      s = s.replace(/\s*[ap]\.?m\.?$/, "");
+      if (/^\d{1,2}:\d{2}$/.test(s)) {
+        const [h, m] = s.split(":");
+        return `${h.padStart(2, "0")}:${m}`;
+      }
+      if (/^\d{1,2}$/.test(s)) return `${s.padStart(2, "0")}:00`;
+      const f = parseFloat(s.replace(",", "."));
+      if (!isNaN(f)) {
+        const h = Math.floor(f), m = Math.round((f - h) * 60);
+        return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+      }
+      return "";
+    }
+ 
+    function getField(row, keys) {
+      for (const k of keys) {
+        if (row[k] !== undefined && String(row[k]).trim() !== "") return String(row[k]).trim();
+      }
+      return "";
+    }
+ 
+    function parseCSV(csv) {
+      const result = Papa.parse(csv, {
+        header: true,
+        skipEmptyLines: "greedy",
+        transformHeader: h => String(h).trim().toLowerCase()
+      });
+      const rows = [];
+      for (const row of result.data) {
+        const date = normalizeDate(getField(row, ["date", "fecha", "día", "dia"]));
+        const time = normalizeTime(getField(row, ["time", "hora", "start", "inicio"]));
+        const title = getField(row, ["title", "título", "titulo", "tema", "subject"]);
+        const link = getField(row, ["link", "enlace", "url"]);
+        const organizer = getField(row, ["organizer", "organizador", "host", "org", "institucion", "institución"]);
+        const category = getField(row, ["category", "categoría", "categoria", "especialidad"]);
+        const language = getField(row, ["language", "idioma", "lang"]);
+        const certificate = getField(row, ["certificate", "certificado", "cert"]);
+        if (date && time && title) {
+          rows.push({ date, time, title, link, organizer, category, language, certificate });
+        }
+      }
+      return rows;
+    }
+ 
+    function withinRange(d, s, e) { return d >= s && d <= e; }
+ 
+    function todayStrLima() {
+      const d = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Lima' }));
+      const Y = d.getFullYear();
+      const M = String(d.getMonth() + 1).padStart(2, '0');
+      const D = String(d.getDate()).padStart(2, '0');
+      return `${Y}-${M}-${D}`;
+    }
+    
+    function getDayName(dateStr) {
+      const date = new Date(dateStr + 'T00:00:00'); 
+      return date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+    }
+
+    function updateDateFilter(dayNames) {
+      const select = document.getElementById('dayFilter');
+      if(!select) return;
+      select.innerHTML = '';
+      const optAll = document.createElement('option');
+      optAll.value = 'all';
+      optAll.textContent = 'All days';
+      select.appendChild(optAll);
+      Array.from(allDates).sort().forEach(date => {
+        const option = document.createElement('option');
+        option.value = date;
+        option.textContent = dayNames[date] || date;
+        select.appendChild(option);
+      });
+    }
+ 
+    function initLanguageFilter(rows) {
+      const sel = document.getElementById('langFilter');
+      if(!sel) return;
+      sel.innerHTML = '<option value="__ALL__">All languages</option>';
+      const langs = Array.from(new Set(
+        rows.map(r => (r.language || '').trim()).filter(Boolean)
+      )).sort((a, b) => a.localeCompare(b));
+      langs.forEach(l => {
+        const opt = document.createElement('option');
+        opt.value = l; opt.textContent = l;
+        sel.appendChild(opt);
+      });
+      sel.onchange = () => filterEvents(WEEKS.find(w => w.key === 'current').dayNames);
+    }
+ 
+    function renderEvents(filteredEvents, dayNames) {
+      const container = document.getElementById('eventsContainer');
+      if(!container) return;
+      container.innerHTML = '';
+      
+      if (filteredEvents.length === 0) {
+        container.innerHTML = '<div class="loading"><p>No events found</p></div>';
+        safeSetText('visibleEvents', '0');
+        return;
+      }
+ 
+      const eventsByDay = {};
+      filteredEvents.forEach(ev => { (eventsByDay[ev.date] ||= []).push(ev); });
+      const todayStr = todayStrLima();
+ 
+      Object.keys(eventsByDay).sort().forEach(date => {
+        const isPast = date < todayStr;
+        const isToday = date === todayStr;
+        const daySection = document.createElement('div');
+        daySection.className = 'day-section';
+        const count = eventsByDay[date].length;
+ 
+        const dayHeader = document.createElement('div');
+        dayHeader.className = `day-header ${isPast ? 'past' : ''} ${isToday ? 'today' : ''}`;
+        const shouldCollapse = !isToday;
+        if (shouldCollapse) dayHeader.classList.add('collapsed');
+ 
+        dayHeader.innerHTML = `
+          <div style="display:flex; align-items:center;">
+            <div class="day-title">${(dayNames[date] || date)} <span style="color:#999; font-weight:600;">(${count})</span></div>
+            ${isToday ? '<span class="today-badge">📍 TODAY</span>' : ''}
+          </div>
+          <div style="display:flex; align-items:center; gap:15px;">
+            <button class="btn-secondary" data-day="${date}" onclick="event.stopPropagation()">📥 Export day</button>
+            <span class="collapse-icon">${shouldCollapse ? '▶' : '▼'}</span>
+          </div>
+        `;
+ 
+        const dayContent = document.createElement('div');
+        dayContent.className = `day-content ${shouldCollapse ? 'collapsed' : ''}`;
+        dayContent.style.maxHeight = shouldCollapse ? '0' : 'none';
+ 
+        dayHeader.addEventListener('click', (e) => {
+          if (e.target.tagName === 'BUTTON') return;
+          const isCollapsed = dayContent.classList.contains('collapsed');
+          dayContent.classList.toggle('collapsed');
+          dayHeader.classList.toggle('collapsed');
+          dayContent.style.maxHeight = isCollapsed ? dayContent.scrollHeight + 'px' : '0';
+          if(isCollapsed) setTimeout(() => { dayContent.style.maxHeight = 'none'; }, 300);
+        });
+ 
+        const eventsGrid = document.createElement('div');
+        eventsGrid.className = 'events-grid';
+ 
+        eventsByDay[date].forEach(event => {
+          const card = document.createElement('div');
+          card.className = 'event-card';
+          const isCertified = (() => {
+            const raw = (event.certificate || '').toString().trim().toLowerCase();
+            if (!raw) return false;
+            return ['yes', 'y', 'true', '1', 'certified', 'sí', 'si'].includes(raw);
+          })();
+          if (isCertified) card.classList.add('certified');
+ 
+          card.innerHTML = `
+            <div class="category-tag">${event.category || 'General'}</div>
+            <div class="event-time">🕐 ${event.time}</div>
+            <div class="event-title">${event.title} ${isCertified ? '<span class="badge badge-cert">Certified</span>' : ''}</div>
+            <div class="event-organizer">📍 ${event.organizer || '—'}</div>
+            <div style="display:flex; gap:6px; margin: 6px 0 10px 0;">${event.language ? `<span class="badge badge-lang">${event.language}</span>` : ''}</div>
+            <div style="display:flex; gap:10px;">
+              ${event.link ? `<a href="${event.link}" target="_blank" class="event-link">Join →</a>` : ''}
+              <button class="ics-btn" data-ics="${event.date}__${event.time}__${(event.title || '').replace(/\s+/g, '_')}">.ics</button>
+            </div>
+          `;
+          eventsGrid.appendChild(card);
+        });
+        dayContent.appendChild(eventsGrid);
+        daySection.appendChild(dayHeader);
+        daySection.appendChild(dayContent);
+        container.appendChild(daySection);
+      });
+      safeSetText('visibleEvents', String(filteredEvents.length));
+      
+      // Re-bind buttons
+      document.querySelectorAll('[data-day]').forEach(btn => {
+        btn.onclick = () => exportICS(filteredEvents.filter(e => e.date === btn.dataset.day), `events-${btn.dataset.day}.ics`);
+      });
+      document.querySelectorAll('[data-ics]').forEach(btn => {
+        btn.onclick = () => {
+          const [d, t] = btn.dataset.ics.split('__');
+          const ev = filteredEvents.find(e => e.date === d && e.time === t);
+          if (ev) exportICS([ev], 'event.ics');
+        };
+      });
+    }
+ 
+    function filterEvents(dayNames) {
+      const select = document.getElementById('dayFilter');
+      const search = (document.getElementById('searchFilter').value || '').toLowerCase();
+      const langSel = document.getElementById('langFilter');
+      const langVal = (langSel && langSel.value) ? langSel.value : '__ALL__';
+ 
+      let selectedDay = select ? select.value : 'all';
+      if (showTodayOnly) {
+        const t = todayStrLima();
+        selectedDay = allDates.has(t) ? t : 'all';
+        if(select) select.value = selectedDay;
+      }
+      const out = events.filter(ev => {
+        const okDay = (selectedDay === 'all') || ev.date === selectedDay;
+        const hay = [ev.title, ev.organizer, ev.category].filter(Boolean).join(' ').toLowerCase();
+        const okSearch = !search || hay.includes(search);
+        const evLang = (ev.language || '').trim();
+        const okLang = (langVal === '__ALL__') || evLang === langVal;
+        return okDay && okSearch && okLang;
+      });
+      renderEvents(out, dayNames);
+    }
+ 
+    /* VIDEO FUNCTIONS */
+    function openVideo(url) {
+      const modal = document.getElementById('videoModal');
+      const iframe = document.getElementById('genericFrame');
+      const fallback = document.getElementById('fallbackLink');
+      iframe.src = url;
+      fallback.href = url;
+      modal.style.display = 'flex';
+    }
+    function closeVideo() {
+      const modal = document.getElementById('videoModal');
+      const iframe = document.getElementById('genericFrame');
+      modal.style.display = 'none';
+      iframe.src = '';
+    }
+
+    /* ICS Export Function */
+    function toICS(list) {
+      const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//CCW//EN"];
+      list.forEach(ev => {
+        const [h, m] = (ev.time || "00:00").split(':').map(n => parseInt(n || "0", 10));
+        const [Y, Mo, D] = ev.date.split('-').map(n => parseInt(n, 10));
+        const start = new Date(Y, (Mo - 1), D, h, m, 0);
+        const end = new Date(start.getTime() + 60 * 60 * 1000);
+        const fmt = d => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z/, "Z");
+        lines.push("BEGIN:VEVENT");
+        lines.push(`DTSTART:${fmt(start)}`);
+        lines.push(`DTEND:${fmt(end)}`);
+        lines.push(`SUMMARY:${ev.title}`);
+        if(ev.link) lines.push(`URL:${ev.link}`);
+        lines.push("END:VEVENT");
+      });
+      lines.push("END:VCALENDAR");
+      return lines.join("\r\n");
+    }
+    function exportICS(list, filename) {
+      const blob = new Blob([toICS(list)], { type: "text/calendar" });
+      const url = URL.createObjectURL(blob);
+      const a = Object.assign(document.createElement("a"), { href: url, download: filename });
+      document.body.appendChild(a); a.click(); a.remove();
+    }
+ 
+    async function loadAll() {
+      const $loading = document.getElementById('loadingSection');
+      const $error = document.getElementById('errorSection');
+      const $main = document.getElementById('mainContent');
+      if($loading) $loading.style.display = 'block';
+      if($error) $error.style.display = 'none';
+      if($main) $main.style.display = 'none';
+ 
+      try {
+        const currentWeekConfig = WEEKS.find(w => w.key === 'current');
+        const url = buildSheetUrl(currentWeekConfig.gid);
+
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("Error HTTP: " + res.status);
+        const csv = await res.text();
+        const parsed = parseCSV(csv);
+        
+        events = parsed.filter(e => withinRange(e.date, currentWeekConfig.start, currentWeekConfig.end))
+                       .sort((a,b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
+        
+        allDates = new Set(events.map(e => e.date));
+        
+        safeSetText('totalEvents', String(events.length));
+        
+        initLanguageFilter(events);
+        updateDateFilter(currentWeekConfig.dayNames);
+        
+        const t = todayStrLima();
+        const toggleBtn = document.getElementById('toggleTodayBtn');
+        if (allDates.has(t)) {
+          showTodayOnly = true; 
+          if(toggleBtn) {
+             toggleBtn.classList.add('active'); 
+             toggleBtn.textContent = '↩️ Show all';
+          }
+        } else {
+          showTodayOnly = false; 
+          if(toggleBtn) {
+             toggleBtn.classList.remove('active'); 
+             toggleBtn.textContent = '🟣 Today only';
+          }
+        }
+        
+        const nowLima = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Lima' }));
+        const count = events.reduce((acc, e) => {
+           const [Y, Mo, D] = e.date.split('-').map(Number);
+           const [h, m] = (e.time || '00:00').split(':').map(n => parseInt(n||"0",10));
+           return acc + (new Date(Y, Mo-1, D, h, m) >= nowLima ? 1 : 0);
+        }, 0);
+        safeSetText('futureEvents', String(count));
+
+        filterEvents(currentWeekConfig.dayNames);
+        if($loading) $loading.style.display = 'none';
+        if($main) $main.style.display = 'block';
+      } catch (err) {
+        console.error(err);
+        if($loading) $loading.style.display = 'none';
+        if($error) {
+           $error.style.display = 'block';
+           $error.innerHTML = `⚠️ Error cargando datos: ${err.message}<br><br>Verifica la URL de Google Sheets.<br><button id="retryBtn" class="btn-secondary">Retry</button>`;
+        }
+        const retryBtn = document.getElementById('retryBtn');
+        if(retryBtn) retryBtn.onclick = loadAll;
+      }
+    }
+ 
+    document.addEventListener('DOMContentLoaded', () => {
+      const reloadBtn = document.getElementById('reloadBtn');
+      if(reloadBtn) reloadBtn.onclick = loadAll;
+      
+      document.getElementById('searchFilter').oninput = () => filterEvents(WEEKS.find(w => w.key === 'current').dayNames);
+      
+      const dayFilter = document.getElementById('dayFilter');
+      if(dayFilter) dayFilter.onchange = () => { 
+         showTodayOnly = false; 
+         const btn = document.getElementById('toggleTodayBtn');
+         if(btn) btn.classList.remove('active'); 
+         filterEvents(WEEKS.find(w => w.key === 'current').dayNames); 
+      };
+
+      const toggleBtn = document.getElementById('toggleTodayBtn');
+      if(toggleBtn) toggleBtn.onclick = function() {
+         showTodayOnly = !showTodayOnly;
+         this.classList.toggle('active');
+         this.textContent = showTodayOnly ? '↩️ Show all' : '🟣 Today only';
+         if (!showTodayOnly && dayFilter) dayFilter.value = 'all';
+         filterEvents(WEEKS.find(w => w.key === 'current').dayNames);
+      };
+      
+      const exportBtn = document.getElementById('exportWeek');
+      if(exportBtn) exportBtn.onclick = () => exportICS(events, 'week.ics');
+      
+      // LÓGICA DE ACORDEÓN CORREGIDA
+      document.querySelectorAll('.resource-accordion-header').forEach(header => {
+        header.addEventListener('click', () => {
+          const content = header.nextElementSibling;
+          
+          // Si está abierto, lo cerramos
+          if (header.classList.contains('open')) {
+            header.classList.remove('open');
+            content.style.display = 'none';
+          } 
+          // Si está cerrado, lo abrimos
+          else {
+            header.classList.add('open');
+            content.style.display = 'block';
+          }
+        });
+      });
+      
+      // Configurar fecha dinámica
+      const currentWeek = WEEKS.find(w => w.key === 'current');
+      if(currentWeek) {
+         const [y1,m1,d1] = currentWeek.start.split('-');
+         const [y2,m2,d2] = currentWeek.end.split('-');
+         const startFmt = new Date(y1, m1-1, d1).toLocaleDateString('en-US', {month:'short', day:'numeric'});
+         const endFmt = new Date(y2, m2-1, d2).toLocaleDateString('en-US', {month:'short', day:'numeric'});
+         safeSetText('dynamicDateHeader', `Week of ${startFmt} – ${endFmt}, ${y1} · Lima, Perú (GMT-5)`);
+      }
+ 
+      loadAll();
+    });
+  </script>
+</body>
+</html>
